@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from recaius.RecaiusTTS import RecaiusTTS
+from recaius.tts import RecaiusTTS
 
 # 登録時に発行された自分のIDとパスワードを設定
 rec = RecaiusTTS('YOUR_ID', 'YOUR_PASSWORD')

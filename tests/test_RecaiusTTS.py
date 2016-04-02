@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import unittest
-from recaius.RecaiusTTS import RecaiusTTS
+from recaius.tts import RecaiusTTS
 
 
 class RecaiusTTSTest(unittest.TestCase):
