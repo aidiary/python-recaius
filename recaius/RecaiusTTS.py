@@ -21,20 +21,26 @@ class RecaiusTTS(object):
         self._values = dict()
         self._values['id'] = recaius_id
         self._values['password'] = recaius_password
-        self.reset()
-
-    def reset(self):
-        all_keys = ['speed', 'pitch', 'depth', 'volume',
-                    'happy', 'angry', 'sad', 'fear', 'tender']
-        for k in all_keys:
-            if k in self._values:
-                del self._values[k]
 
         # default settings
         lang, speaker_id = self.speaker2info['sakura']
         self._values['lang'] = lang
         self._values['speaker_id'] = speaker_id
         self._values['codec'] = 'audio/x-linear'  # for pyaudio
+
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        all_keys = ['speed', 'pitch', 'depth', 'volume']
+        for k in all_keys:
+            if k in self._values:
+                del self._values[k]
+
+    def reset_emotions(self):
+        all_keys = ['happy', 'angry', 'sad', 'fear', 'tender']
+        for k in all_keys:
+            if k in self._values:
+                del self._values[k]
 
     def speaker(self, speaker):
         if speaker in self.speaker2info:
@@ -46,6 +52,7 @@ class RecaiusTTS(object):
         return self
 
     def emotion(self, emotion, level):
+        self.reset_emotions()
         if emotion in ['happy', 'angry', 'sad', 'fear', 'tender']:
             self._values[emotion] = level
         else:
