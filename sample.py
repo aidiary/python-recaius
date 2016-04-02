@@ -45,5 +45,6 @@ rec.reset_parameters()
 
 # ファイルに保存する
 rec.speaker('sakura')
-rec.speed(-3).pitch(8).depth(-2).volume(30).save_wav('ファイルに保存します。', 'output.wav')
+rec.speed(-3).pitch(8).depth(-2).volume(30).speak('どんな声になるのかな？。')
+rec.save_wav('音声をファイルに保存します。', 'output.wav')
 rec.reset_parameters()
