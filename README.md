@@ -5,15 +5,6 @@ Python wrapper for [RECAIUS API](https://developer.recaius.io/jp/top.html)
 
 To use this library, first you need to [complete the user registration](https://developer.recaius.io/jp/registration.html)
 
-Installation
-------------
-
-```bash
-$ git clone https://github.com/aidiary/python-recaius.git
-$ cd python-recaius
-$ python setup.py install
-```
-
 Dependencies
 ------------
 
