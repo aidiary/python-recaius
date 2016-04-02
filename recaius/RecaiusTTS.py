@@ -1,34 +1,32 @@
 # -*- coding: utf-8 -*-
 import os
-import sys
 import wave
 import json
 import urllib.request
 import pyaudio
-import copy
+
 
 class RecaiusTTS(object):
     """Speech Synthesizer by RECAIUS-dev API"""
     URL = 'https://try-api.recaius.jp/tts/v1/plaintext2speechwave'
 
     speaker2info = {
-        'itaru' : ('ja_JP', 'ja_JP-M0001-H00T'),
+        'itaru': ('ja_JP', 'ja_JP-M0001-H00T'),
         'hiroto': ('ja_JP', 'ja_JP-M0002-H01T'),
-        'moe'   : ('ja_JP', 'ja_JP-F0005-U01T'),
+        'moe': ('ja_JP', 'ja_JP-F0005-U01T'),
         'sakura': ('ja_JP', 'ja_JP-F0006-C53T'),
     }
 
-
     def __init__(self, recaius_id, recaius_password):
-        self._values = {}
+        self._values = dict()
         self._values['id'] = recaius_id
         self._values['password'] = recaius_password
         self.reset()
 
     def reset(self):
-        allkeys = ['speed', 'pitch', 'depth', 'volume',
-                   'happy', 'angry', 'sad', 'fear', 'tender']
-        for k in allkeys:
+        all_keys = ['speed', 'pitch', 'depth', 'volume',
+                    'happy', 'angry', 'sad', 'fear', 'tender']
+        for k in all_keys:
             if k in self._values:
                 del self._values[k]
 
@@ -37,7 +35,6 @@ class RecaiusTTS(object):
         self._values['lang'] = lang
         self._values['speaker_id'] = speaker_id
         self._values['codec'] = 'audio/x-linear'  # for pyaudio
-        
 
     def speaker(self, speaker):
         if speaker in self.speaker2info:
@@ -52,7 +49,7 @@ class RecaiusTTS(object):
         if emotion in ['happy', 'angry', 'sad', 'fear', 'tender']:
             self._values[emotion] = level
         else:
-            raise RecaiusTTSException('Unknown emotion: %s' % speaker)
+            raise RecaiusTTSException('Unknown emotion: %s' % emotion)
         return self
 
     def speed(self, speed):
@@ -85,15 +82,15 @@ class RecaiusTTS(object):
 
     def send_request(self):
         # check necessary parameters
-        if not 'id' in self._values:
+        if 'id' not in self._values:
             raise RecaiusTTSException('Missing parameter: id')
-        if not 'password' in self._values:
+        if 'password' not in self._values:
             raise RecaiusTTSException('Missing parameter: password')
-        if not 'plain_text' in self._values:
+        if 'plain_text' not in self._values:
             raise RecaiusTTSException('Missing parameter: plain_text')
-        if not 'lang' in self._values:
+        if 'lang' not in self._values:
             raise RecaiusTTSException('Missing parameter: lang')
-        if not 'speaker_id' in self._values:
+        if 'speaker_id' not in self._values:
             raise RecaiusTTSException('Missing parameter: speaker_id')
 
         headers = {'Content-Type': 'application/json'}
@@ -124,21 +121,14 @@ class RecaiusTTS(object):
         p.terminate()
         os.remove(temp)
 
-    def save_wav(self, plain_text, wavefile):
+    def save_wav(self, plain_text, wave_file):
         self._values['plain_text'] = plain_text
 
         response = self.send_request()
         if response.code == 200:
-            with open(wavefile, "wb") as fp:
+            with open(wave_file, "wb") as fp:
                 fp.write(response.read())
 
 
 class RecaiusTTSException(Exception):
     pass
-
-
-if __name__ == '__main__':
-    recaius_id = sys.argv[1]
-    recaius_password = sys.argv[2]
-    rectts = RecaiusTTS(recaius_id, recaius_password)
-    rectts.speaker('sakura').emotion('tender', 100).speak('こんにちはお元気ですか？')

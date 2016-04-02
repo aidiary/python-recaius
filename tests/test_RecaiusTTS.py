@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 import unittest
-from recaius.RecaiusTTS import RecaiusTTS, RecaiusTTSException
+from recaius.RecaiusTTS import RecaiusTTS
+
 
 class RecaiusTTSTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.rec = RecaiusTTS('YOUR_ID', 'YOUR_PASSWORD')
+#        cls.rec = RecaiusTTS('YOUR_ID', 'YOUR_PASSWORD')
+        cls.rec = RecaiusTTS('DV1N0170DT3', 'c85fb44b1a831430')
 
     def setUp(self):
         self.rec.reset()
@@ -31,4 +33,3 @@ class RecaiusTTSTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-
