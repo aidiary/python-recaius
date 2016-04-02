@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os
 import sys
 import wave
 import json
@@ -35,28 +36,47 @@ class RecaiusTTS(object):
         pass
 
     def speaker(self, speaker):
-        if not speaker in spaker2info:
+        if speaker in self.speaker2info:
+            lang, speaker_id = self.speaker2info[speaker]
+            self._values['lang'] = lang
+            self._values['speaker_id'] = speaker_id
+        else:
             raise RecaiusTTSException('Unknown speaker: %s' % speaker)
-
-        lang, speaker_id = self.speaker2info[speaker]
-        self._values['lang'] = lang
-        self._values['speaker_id'] = speaker_id
-
         return self
 
     def emotion(self, emotion, level):
+        if emotion in ['happy', 'angry', 'sad', 'fear', 'tender']:
+            self._values[emotion] = level
+        else:
+            raise RecaiusTTSException('Unknown emotion: %s' % speaker)
         return self
 
     def speed(self, speed):
+        if -10 <= speed <= 10:
+            self._values["speed"] = speed
+        else:
+            raise RecaiusTTSException('Invalid speed: %d [-10, 10]' % speed)
         return self
 
     def pitch(self, pitch):
+        if -10 <= pitch <= 10:
+            self._values["pitch"] = pitch
+        else:
+            raise RecaiusTTSException('Invalid pitch: %d [-10, 10]' % pitch)
         return self
 
-    def depth(self, pitch):
+    def depth(self, depth):
+        if -4 <= depth <= 4:
+            self._values["depth"] = depth
+        else:
+            raise RecaiusTTSException('Invalid depth: %d [-4, 4]' % depth)
         return self
 
-    def volume(self, pitch):
+    def volume(self, volume):
+        if -50 <= volume <= 50:
+            self._values["volume"] = volume
+        else:
+            raise RecaiusTTSException('Invalid volume: %d [-50, 50]' % volume)
         return self
 
     def send_request(self):
@@ -99,6 +119,8 @@ class RecaiusTTS(object):
         stream.close()
         p.terminate()
 
+        os.remove(temp)
+
     def save_wav(self, plain_text, wavefile):
         self._values['plain_text'] = plain_text
 
@@ -113,7 +135,7 @@ class RecaiusTTSException(Exception):
 
 
 if __name__ == '__main__':
-    recaius_id = ''
-    recaius_password = ''
+    recaius_id = sys.argv[1]
+    recaius_password = sys.argv[2]
     rectts = RecaiusTTS(recaius_id, recaius_password)
-    rectts.speak(u'こんにちはお元気ですか？')
+    rectts.speaker('sakura').emotion('tender', 100).speak(u'こんにちはお元気ですか？')
