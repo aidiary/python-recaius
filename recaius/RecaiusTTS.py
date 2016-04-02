@@ -5,7 +5,7 @@ import wave
 import json
 import urllib.request
 import pyaudio
-
+import copy
 
 class RecaiusTTS(object):
     """Speech Synthesizer by RECAIUS-dev API"""
@@ -21,19 +21,23 @@ class RecaiusTTS(object):
 
     def __init__(self, recaius_id, recaius_password):
         self._values = {}
-
-        # user settings
         self._values['id'] = recaius_id
         self._values['password'] = recaius_password
+        self.reset()
+
+    def reset(self):
+        allkeys = ['speed', 'pitch', 'depth', 'volume',
+                   'happy', 'angry', 'sad', 'fear', 'tender']
+        for k in allkeys:
+            if k in self._values:
+                del self._values[k]
 
         # default settings
         lang, speaker_id = self.speaker2info['sakura']
         self._values['lang'] = lang
         self._values['speaker_id'] = speaker_id
         self._values['codec'] = 'audio/x-linear'  # for pyaudio
-
-    def reset(self):
-        pass
+        
 
     def speaker(self, speaker):
         if speaker in self.speaker2info:
@@ -118,7 +122,6 @@ class RecaiusTTS(object):
             data = w.readframes(chunk)
         stream.close()
         p.terminate()
-
         os.remove(temp)
 
     def save_wav(self, plain_text, wavefile):
@@ -138,4 +141,4 @@ if __name__ == '__main__':
     recaius_id = sys.argv[1]
     recaius_password = sys.argv[2]
     rectts = RecaiusTTS(recaius_id, recaius_password)
-    rectts.speaker('sakura').emotion('tender', 100).speak(u'こんにちはお元気ですか？')
+    rectts.speaker('sakura').emotion('tender', 100).speak('こんにちはお元気ですか？')
