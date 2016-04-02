@@ -6,8 +6,7 @@ from recaius.RecaiusTTS import RecaiusTTS
 class RecaiusTTSTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-#        cls.rec = RecaiusTTS('YOUR_ID', 'YOUR_PASSWORD')
-        cls.rec = RecaiusTTS('DV1N0170DT3', 'c85fb44b1a831430')
+        cls.rec = RecaiusTTS('YOUR_ID', 'YOUR_PASSWORD')
 
     def setUp(self):
         self.rec.reset()
@@ -29,6 +28,14 @@ class RecaiusTTSTest(unittest.TestCase):
     def test_pitch(self):
         self.rec.pitch(-10).speak('低い声です。')
         self.rec.pitch(10).speak('高い声です。')
+
+    def test_depth(self):
+        self.rec.depth(-4).speak('細い声です。')
+        self.rec.depth(4).speak('太い声です。')
+
+    def test_volume(self):
+        self.rec.volume(-40).speak('小さい声です。')
+        self.rec.volume(50).speak('大きい声です。')
 
 
 if __name__ == '__main__':
