@@ -99,9 +99,9 @@ class RecaiusTTS(object):
             raise RecaiusTTSException('Invalid volume: %d [-50, 50]' % volume)
         return self
 
-    def speak(self, plain_text):
+    def speak(self, text, is_phonetic=False):
         temp = 'temp.wav'
-        self.save_wav(plain_text, temp)
+        self.save_wav(text, temp, is_phonetic)
 
         w = wave.open(temp)
         p = pyaudio.PyAudio()
@@ -118,10 +118,13 @@ class RecaiusTTS(object):
         stream.close()
         p.terminate()
 
-    def save_wav(self, plain_text, wave_file):
-        self._values['plain_text'] = plain_text
+    def save_wav(self, text, wave_file, is_phonetic=False):
+        if is_phonetic:
+            self._values['phonetic_text'] = text
+        else:
+            self._values['plain_text'] = text
 
-        response = self._plaintext2speechwave()
+        response = self._text2speechwave(is_phonetic)
         if response.code == 200:
             with open(wave_file, "wb") as fp:
                 fp.write(response.read())
@@ -149,11 +152,11 @@ class RecaiusTTS(object):
 
         return result
 
-    def get_phonetic(self, text, lang):
+    def get_phonetic(self, plain_text, lang):
         temp_values = dict()
         temp_values['id'] = self.recaius_id
         temp_values['password'] = self.recaius_password
-        temp_values['plain_text'] = text
+        temp_values['plain_text'] = plain_text
         temp_values['lang'] = lang
 
         if HTTP_PROXY:
@@ -166,11 +169,11 @@ class RecaiusTTS(object):
         response = urllib.request.urlopen(req)
 
         if response.code == 200:
-            result = response.read().decode('utf-8')
+            phonetic_text = response.read().decode('utf-8')
         else:
             raise RecaiusTTSException('ERROR: response code: %d' % response.code)
 
-        return result
+        return phonetic_text
 
     def _set_proxy(self):
         proxy_support = urllib.request.ProxyHandler({'http': HTTP_PROXY,
@@ -178,14 +181,18 @@ class RecaiusTTS(object):
         opener = urllib.request.build_opener(proxy_support)
         urllib.request.install_opener(opener)
 
-    def _plaintext2speechwave(self):
+    def _text2speechwave(self, is_phonetic=False):
         # check necessary parameters
         if 'id' not in self._values:
             raise RecaiusTTSException('Missing parameter: id')
         if 'password' not in self._values:
             raise RecaiusTTSException('Missing parameter: password')
-        if 'plain_text' not in self._values:
-            raise RecaiusTTSException('Missing parameter: plain_text')
+        if is_phonetic:
+            if 'phonetic_text' not in self._values:
+                raise RecaiusTTSException('Missing parameter: phonetic_text')
+        else:
+            if 'plain_text' not in self._values:
+                raise RecaiusTTSException('Missing parameter: plain_text')
         if 'lang' not in self._values:
             raise RecaiusTTSException('Missing parameter: lang')
         if 'speaker_id' not in self._values:
@@ -194,10 +201,15 @@ class RecaiusTTS(object):
         if HTTP_PROXY:
             self._set_proxy()
 
+        if is_phonetic:
+            function_name = 'phonetictext2speechwave'
+        else:
+            function_name = 'plaintext2speechwave'
+
         headers = {'Content-Type': 'application/json'}
         data = json.dumps(self._values)
         data = data.encode('utf-8')
-        req = urllib.request.Request(TTS_URL + 'plaintext2speechwave', data, headers)
+        req = urllib.request.Request(TTS_URL + function_name, data, headers)
         response = urllib.request.urlopen(req)
 
         return response
@@ -208,4 +220,4 @@ class RecaiusTTSException(Exception):
 if __name__ == '__main__':
     from settings import TTS_ID, TTS_PASSWORD
     rec = RecaiusTTS(TTS_ID, TTS_PASSWORD)
-    print(rec.get_phonetic('這是一個考驗。', 'zh_CN'))
+    rec.speak("ｺﾚﾜ/ﾖ'ﾐ ｼｭ%ﾄｸﾉ ﾃ'ｽ%ﾄﾃﾞｽ%.", is_phonetic=True)

@@ -61,5 +61,13 @@ class RecaiusTTSTest(unittest.TestCase):
         self.assertEqual(self.rec.get_phonetic('這是一個考驗。', 'zh_CN'),
                          '#Tg#zhe4 #Tv#shi4 #Tm#yi4 #Tg#ge2 #Tv#kao3 #Tg;P.#yan4')
 
+    def test_phonetictext2speechwave(self):
+        self.rec.speak("ｺﾚﾜ/ﾖﾐ ｼｭ%ﾄｸﾉ ﾃ'ｽ%ﾄﾃﾞｽ%.", is_phonetic=True)
+        self.rec.speak(self.rec.get_phonetic('ありがとうございます。', 'ja_JP'), is_phonetic=True)
+        self.rec.speaker('jane').speak('"DIs "Iz "@ #P.#"tEst#E\#', is_phonetic=True)
+        self.rec.speaker('nicole').speak('s@."si "E:t 9~ #P.#"tE:st#E\#', is_phonetic=True)
+        self.rec.speaker('miyon').speak('이거슨 테스트 임니다.', is_phonetic=True)
+        self.rec.speaker('linly').speak('#Tg#zhe4 #Tv#shi4 #Tm#yi4 #Tg#ge2 #Tv#kao3 #Tg;P.#yan4', is_phonetic=True)
+
 if __name__ == '__main__':
     unittest.main()
