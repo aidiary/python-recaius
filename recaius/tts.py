@@ -4,7 +4,9 @@ import wave
 import json
 import urllib.request
 import pyaudio
-from settings import TTS_URL, HTTP_PROXY, HTTPS_PROXY
+from settings import HTTP_PROXY, HTTPS_PROXY
+
+TTS_URL = "https://try-api.recaius.jp/tts/v1/"
 
 class RecaiusTTS(object):
     """Speech Synthesizer by RECAIUS-dev API"""
@@ -16,9 +18,12 @@ class RecaiusTTS(object):
     }
 
     def __init__(self, recaius_id, recaius_password):
+        self.recaius_id = recaius_id
+        self.recaius_password = recaius_password
+
         self._values = dict()
-        self._values['id'] = recaius_id
-        self._values['password'] = recaius_password
+        self._values['id'] = self.recaius_id
+        self._values['password'] = self.recaius_password
 
         # default settings
         lang, speaker_id = self.speaker2info['sakura']
@@ -28,15 +33,20 @@ class RecaiusTTS(object):
 
         self.reset_parameters()
 
+    def clear_parameters(self):
+        self._values = dict()
+        self._values['id'] = self.recaius_id
+        self._values['password'] = self.recaius_password
+
     def reset_parameters(self):
-        all_keys = ['speed', 'pitch', 'depth', 'volume']
-        for k in all_keys:
+        delete_keys = ['speed', 'pitch', 'depth', 'volume']
+        for k in delete_keys:
             if k in self._values:
                 del self._values[k]
 
     def reset_emotions(self):
-        all_keys = ['happy', 'angry', 'sad', 'fear', 'tender']
-        for k in all_keys:
+        delete_keys = ['happy', 'angry', 'sad', 'fear', 'tender']
+        for k in delete_keys:
             if k in self._values:
                 del self._values[k]
 
@@ -85,33 +95,6 @@ class RecaiusTTS(object):
             raise RecaiusTTSException('Invalid volume: %d [-50, 50]' % volume)
         return self
 
-    def send_request(self):
-        # check necessary parameters
-        if 'id' not in self._values:
-            raise RecaiusTTSException('Missing parameter: id')
-        if 'password' not in self._values:
-            raise RecaiusTTSException('Missing parameter: password')
-        if 'plain_text' not in self._values:
-            raise RecaiusTTSException('Missing parameter: plain_text')
-        if 'lang' not in self._values:
-            raise RecaiusTTSException('Missing parameter: lang')
-        if 'speaker_id' not in self._values:
-            raise RecaiusTTSException('Missing parameter: speaker_id')
-
-        if HTTP_PROXY:
-            proxy_support = urllib.request.ProxyHandler({'http': HTTP_PROXY,
-                                                         'https': HTTPS_PROXY})
-            opener = urllib.request.build_opener(proxy_support)
-            urllib.request.install_opener(opener)
-
-        headers = {'Content-Type': 'application/json'}
-        data = json.dumps(self._values)
-        data = data.encode('utf-8')
-        req = urllib.request.Request(TTS_URL, data, headers)
-        response = urllib.request.urlopen(req)
-
-        return response
-
     def speak(self, plain_text):
         temp = 'temp.wav'
         self.save_wav(plain_text, temp)
@@ -134,11 +117,68 @@ class RecaiusTTS(object):
     def save_wav(self, plain_text, wave_file):
         self._values['plain_text'] = plain_text
 
-        response = self.send_request()
+        response = self._plaintext2speechwave()
         if response.code == 200:
             with open(wave_file, "wb") as fp:
                 fp.write(response.read())
+        else:
+            raise RecaiusTTSException('ERROR: response code: %d' % response.code)
 
+    def get_speaker_list(self):
+        temp_values = dict()
+        temp_values['id'] = self.recaius_id
+        temp_values['password'] = self.recaius_password
+
+        if HTTP_PROXY:
+            self._set_proxy()
+
+        headers = {'Content-Type': 'application/json'}
+        data = json.dumps(temp_values)
+        data = data.encode('utf-8')
+        req = urllib.request.Request(TTS_URL + 'get_speaker_list', data, headers)
+        response = urllib.request.urlopen(req)
+
+        if response.code == 200:
+            result = response.read().decode('utf-8')
+        else:
+            raise RecaiusTTSException('ERROR: response code: %d' % response.code)
+
+        return result
+
+    def _set_proxy(self):
+        proxy_support = urllib.request.ProxyHandler({'http': HTTP_PROXY,
+                                                     'https': HTTPS_PROXY})
+        opener = urllib.request.build_opener(proxy_support)
+        urllib.request.install_opener(opener)
+
+    def _plaintext2speechwave(self):
+        # check necessary parameters
+        if 'id' not in self._values:
+            raise RecaiusTTSException('Missing parameter: id')
+        if 'password' not in self._values:
+            raise RecaiusTTSException('Missing parameter: password')
+        if 'plain_text' not in self._values:
+            raise RecaiusTTSException('Missing parameter: plain_text')
+        if 'lang' not in self._values:
+            raise RecaiusTTSException('Missing parameter: lang')
+        if 'speaker_id' not in self._values:
+            raise RecaiusTTSException('Missing parameter: speaker_id')
+
+        if HTTP_PROXY:
+            self._set_proxy()
+
+        headers = {'Content-Type': 'application/json'}
+        data = json.dumps(self._values)
+        data = data.encode('utf-8')
+        req = urllib.request.Request(TTS_URL + 'plaintext2speechwave', data, headers)
+        response = urllib.request.urlopen(req)
+
+        return response
 
 class RecaiusTTSException(Exception):
     pass
+
+if __name__ == '__main__':
+    from settings import TTS_ID, TTS_PASSWORD
+    rec = RecaiusTTS(TTS_ID, TTS_PASSWORD)
+    print(rec.get_speaker_list())

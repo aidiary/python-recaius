@@ -42,6 +42,8 @@ class RecaiusTTSTest(unittest.TestCase):
         self.rec.volume(-40).speak('小さい声です。')
         self.rec.volume(50).speak('大きい声です。')
 
+    def test_get_speaker_list(self):
+        self.assertEquals(self.rec.get_speaker_list()[2:5], 'xml')
 
 if __name__ == '__main__':
     unittest.main()
