@@ -149,6 +149,29 @@ class RecaiusTTS(object):
 
         return result
 
+    def get_phonetic(self, text, lang):
+        temp_values = dict()
+        temp_values['id'] = self.recaius_id
+        temp_values['password'] = self.recaius_password
+        temp_values['plain_text'] = text
+        temp_values['lang'] = lang
+
+        if HTTP_PROXY:
+            self._set_proxy()
+
+        headers = {'Content-Type': 'application/json'}
+        data = json.dumps(temp_values)
+        data = data.encode('utf-8')
+        req = urllib.request.Request(TTS_URL + 'plaintext2phonetictext', data, headers)
+        response = urllib.request.urlopen(req)
+
+        if response.code == 200:
+            result = response.read().decode('utf-8')
+        else:
+            raise RecaiusTTSException('ERROR: response code: %d' % response.code)
+
+        return result
+
     def _set_proxy(self):
         proxy_support = urllib.request.ProxyHandler({'http': HTTP_PROXY,
                                                      'https': HTTPS_PROXY})
@@ -185,4 +208,4 @@ class RecaiusTTSException(Exception):
 if __name__ == '__main__':
     from settings import TTS_ID, TTS_PASSWORD
     rec = RecaiusTTS(TTS_ID, TTS_PASSWORD)
-    print(rec.get_speaker_list())
+    print(rec.get_phonetic('這是一個考驗。', 'zh_CN'))

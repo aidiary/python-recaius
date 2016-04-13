@@ -49,5 +49,17 @@ class RecaiusTTSTest(unittest.TestCase):
     def test_get_speaker_list(self):
         self.assertEquals(self.rec.get_speaker_list()[2:5], 'xml')
 
+    def test_get_phonetic(self):
+        self.assertEqual(self.rec.get_phonetic('これは読み取得のテストです。', 'ja_JP'),
+                         "ｺﾚﾜ/ﾖ'ﾐ ｼｭ%ﾄｸﾉ ﾃ'ｽ%ﾄﾃﾞｽ%.")
+        self.assertEqual(self.rec.get_phonetic('This is a test.', 'en_US'),
+                         '"DIs "Iz "@ #P.#"tEst#E\#')
+        self.assertEqual(self.rec.get_phonetic('Ceci est un test.', 'fr_FR'),
+                         's@."si "E:t 9~ #P.#"tE:st#E\#')
+        self.assertEqual(self.rec.get_phonetic('이것은 테스트 입니다.', 'ko_KR'),
+                         '이거슨 테스트 임니다.')
+        self.assertEqual(self.rec.get_phonetic('這是一個考驗。', 'zh_CN'),
+                         '#Tg#zhe4 #Tv#shi4 #Tm#yi4 #Tg#ge2 #Tv#kao3 #Tg;P.#yan4')
+
 if __name__ == '__main__':
     unittest.main()
