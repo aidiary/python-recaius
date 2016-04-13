@@ -15,6 +15,10 @@ class RecaiusTTSTest(unittest.TestCase):
     def test_speaker(self):
         self.rec.speak('サクラです。')
         self.rec.speaker('hiroto').speak('ヒロトです。')
+        self.rec.speaker('jane').speak('My name is Jane.')
+        self.rec.speaker('nicole').speak('Je m\'appelle Nicole.')
+        self.rec.speaker('miyon').speak('저는 미연입니다')
+        self.rec.speaker('linly').speak('我是鈴麗.')
 
     def test_emotion(self):
         self.rec.speaker('sakura')

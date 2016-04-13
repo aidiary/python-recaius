@@ -15,6 +15,10 @@ class RecaiusTTS(object):
         'hiroto': ('ja_JP', 'ja_JP-M0002-H01T'),
         'moe': ('ja_JP', 'ja_JP-F0005-U01T'),
         'sakura': ('ja_JP', 'ja_JP-F0006-C53T'),
+        'jane': ('en_US', 'en_US-F0001-H00T'),
+        'nicole': ('fr_FR', 'fr_FR-F0001-H00T'),
+        'miyon': ('ko_KR', 'ko_KR-F0001-H00T'),
+        'linly': ('zh_CN', 'zh_CN-en_US-F0002-H00T')
     }
 
     def __init__(self, recaius_id, recaius_password):
