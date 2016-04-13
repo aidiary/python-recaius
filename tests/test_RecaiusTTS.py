@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 import unittest
 from recaius.tts import RecaiusTTS
-
+from settings import TTS_ID, TTS_PASSWORD
 
 class RecaiusTTSTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.rec = RecaiusTTS('YOUR_ID', 'YOUR_PASSWORD')
+        cls.rec = RecaiusTTS(TTS_ID, TTS_PASSWORD)
 
     def setUp(self):
         self.rec.reset_parameters()

@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 from recaius.tts import RecaiusTTS
+from settings import TTS_ID, TTS_PASSWORD
 
 # 登録時に発行された自分のIDとパスワードを設定
-rec = RecaiusTTS('YOUR_ID', 'YOUR_PASSWORD')
+rec = RecaiusTTS(TTS_ID, TTS_PASSWORD)
 
 # デフォルトの話者はsakura
 rec.speak('あらゆる現実をすべて自分のほうへねじ曲げたのだ。')

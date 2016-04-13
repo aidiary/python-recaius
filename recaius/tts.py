@@ -4,12 +4,10 @@ import wave
 import json
 import urllib.request
 import pyaudio
-
+from settings import TTS_URL, HTTP_PROXY, HTTPS_PROXY
 
 class RecaiusTTS(object):
     """Speech Synthesizer by RECAIUS-dev API"""
-    URL = 'https://try-api.recaius.jp/tts/v1/plaintext2speechwave'
-
     speaker2info = {
         'itaru': ('ja_JP', 'ja_JP-M0001-H00T'),
         'hiroto': ('ja_JP', 'ja_JP-M0002-H01T'),
@@ -100,10 +98,16 @@ class RecaiusTTS(object):
         if 'speaker_id' not in self._values:
             raise RecaiusTTSException('Missing parameter: speaker_id')
 
+        if HTTP_PROXY:
+            proxy_support = urllib.request.ProxyHandler({'http': HTTP_PROXY,
+                                                         'https': HTTPS_PROXY})
+            opener = urllib.request.build_opener(proxy_support)
+            urllib.request.install_opener(opener)
+
         headers = {'Content-Type': 'application/json'}
         data = json.dumps(self._values)
         data = data.encode('utf-8')
-        req = urllib.request.Request(self.URL, data, headers)
+        req = urllib.request.Request(TTS_URL, data, headers)
         response = urllib.request.urlopen(req)
 
         return response
@@ -126,7 +130,6 @@ class RecaiusTTS(object):
             data = w.readframes(chunk)
         stream.close()
         p.terminate()
-        os.remove(temp)
 
     def save_wav(self, plain_text, wave_file):
         self._values['plain_text'] = plain_text
