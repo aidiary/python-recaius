@@ -38,21 +38,28 @@ class RecaiusASR(object):
 
     def recognize(self, wave_file):
         uuid = self._login()
+        print("uuid:", uuid)
 
-        w = wave.open(wave_file)
+        wf = wave.open(wave_file)
 
         p = pyaudio.PyAudio()
         stream = p.open(
-            format=p.get_format_from_width(w.getsampwidth()),
-            channels=w.getnchannels(),
-            rate=w.getframerate(),
+            format=p.get_format_from_width(wf.getsampwidth()),
+            channels=wf.getnchannels(),
+            rate=wf.getframerate(),
             output=True)
-        chunk = 999999999
-        data = w.readframes(chunk)
-        voiceid = 1
-        self._voice(uuid, voiceid, data, wave_file)
-        response = self._voice(uuid, voiceid, b'', wave_file)
-        print("==>", response.status_code, response.text)
+        chunk = 31250
+        data = wf.readframes(chunk)
+        voice_id = 1
+        while data != b'':
+            response = self._voice(uuid, voice_id, data)
+            print("%d:" % voice_id, len(data), response)
+            data = wf.readframes(chunk)
+            voice_id += 1
+        response = self._voice(uuid, voice_id, data)
+        print("%d:" % voice_id, len(data), response)
+        response = self._result(uuid)
+        print("==>", response)
         self._logout(uuid)
 
     def _login(self):
@@ -84,16 +91,15 @@ class RecaiusASR(object):
 
         return
 
-    def _voice(self, uuid, voiceid, pcm_data, wave_file):
-        voice = open(wave_file, 'rb')
-        files = {'voice': ('data.wav', voice, 'application/octet-stream')}
-        data = {'voiceid': voiceid}
+    def _voice(self, uuid, voice_id, pcm_data):
+        files = {'voice': ('dummy.wav', pcm_data, 'application/octet-stream')}
+        data = {'voiceid': voice_id}
         response = requests.put(ASR_URL + uuid + '/voice', files=files, data=data, proxies=self.proxies)
-        print(response.status_code)
-        return response
+        return response.status_code, response.text
 
     def _result(self, uuid):
-        pass
+        response = requests.get(ASR_URL + uuid + '/result', proxies=self.proxies)
+        return response.status_code, response.text
 
 class RecaiusASRException(Exception):
     pass
@@ -101,4 +107,4 @@ class RecaiusASRException(Exception):
 if __name__ == '__main__':
     from settings import ASR_ID, ASR_PASSWORD
     rec = RecaiusASR(ASR_ID, ASR_PASSWORD, 'ja_JP')
-    rec.recognize('../recaius_test.wav')
+    rec.recognize('../sample.wav')
