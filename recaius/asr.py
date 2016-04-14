@@ -2,11 +2,11 @@
 import wave
 import json
 import requests
-import pyaudio
 from settings import HTTP_PROXY, HTTPS_PROXY
 
 ASR_URL = "https://try-api.recaius.jp/asr/v1/"
 MAX_QUERY = 10
+
 
 class RecaiusASR(object):
     """Speech Recognizer by RECAIUS-dev API"""
@@ -44,13 +44,6 @@ class RecaiusASR(object):
         print("login: uuid=%s" % uuid)
 
         wf = wave.open(wave_file)
-
-        p = pyaudio.PyAudio()
-        stream = p.open(
-            format=p.get_format_from_width(wf.getsampwidth()),
-            channels=wf.getnchannels(),
-            rate=wf.getframerate(),
-            output=True)
 
         # send speech data
         chunk = 31250
@@ -123,7 +116,7 @@ class RecaiusASR(object):
         headers = {'Content-Type': 'application/json'}
         data = json.dumps(values)
         data = data.encode('utf-8')
-        response = requests.post(ASR_URL + uuid + '/logout', data=data, headers=headers, proxies=self.proxies)
+        requests.post(ASR_URL + uuid + '/logout', data=data, headers=headers, proxies=self.proxies)
 
         return
 
@@ -137,10 +130,13 @@ class RecaiusASR(object):
         response = requests.get(ASR_URL + uuid + '/result', proxies=self.proxies)
         return response
 
+
 class RecaiusASRException(Exception):
     pass
 
+
 if __name__ == '__main__':
     from settings import ASR_ID, ASR_PASSWORD
+
     rec = RecaiusASR(ASR_ID, ASR_PASSWORD, 'ja_JP')
     rec.recognize('../recaius_test.wav')
