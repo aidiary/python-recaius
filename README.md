@@ -8,9 +8,12 @@ To use this library, first you need to [complete the user registration](https://
 Dependencies
 ------------
 
-Need to install [pyaudio](https://people.csail.mit.edu/hubert/pyaudio/).
+Need to install
+
+- [pyaudio](https://people.csail.mit.edu/hubert/pyaudio/)
+- [requests](http://docs.python-requests.org/en/latest/)
 
 Usage
 -----
 
-See [samples.py](https://github.com/aidiary/python-recaius/blob/master/sample.py).
+See [samples_tts.py](https://github.com/aidiary/python-recaius/blob/master/sample_tts.py).
