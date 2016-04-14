@@ -6,6 +6,7 @@ import pyaudio
 from settings import HTTP_PROXY, HTTPS_PROXY
 
 ASR_URL = "https://try-api.recaius.jp/asr/v1/"
+MAX_QUERY = 10
 
 class RecaiusASR(object):
     """Speech Recognizer by RECAIUS-dev API"""
@@ -37,8 +38,10 @@ class RecaiusASR(object):
         }
 
     def recognize(self, wave_file):
+        result_recognize = []
+
         uuid = self._login()
-        print("uuid:", uuid)
+        print("login: uuid=%s" % uuid)
 
         wf = wave.open(wave_file)
 
@@ -48,19 +51,53 @@ class RecaiusASR(object):
             channels=wf.getnchannels(),
             rate=wf.getframerate(),
             output=True)
+
+        # send speech data
         chunk = 31250
         data = wf.readframes(chunk)
         voice_id = 1
         while data != b'':
             response = self._voice(uuid, voice_id, data)
-            print("%d:" % voice_id, len(data), response)
+            if response.status_code == 204:
+                continue
+
+            json_result = json.loads(response.text)
+            print(voice_id, response.status_code, json_result)
+
+            # add final recognition result if 'RESULT' is contained
+            for elm in json_result:
+                if elm[0] == 'RESULT':
+                    result_recognize.append(elm[1])
+
             data = wf.readframes(chunk)
             voice_id += 1
-        response = self._voice(uuid, voice_id, data)
-        print("%d:" % voice_id, len(data), response)
-        response = self._result(uuid)
-        print("==>", response)
+
+        # send finalize signal
+        self._voice(uuid, voice_id, b'')
+
+        # get recognition result
+        num_query = 0
+        while num_query < MAX_QUERY:
+            response = self._result(uuid)
+            if response.status_code == 204:
+                num_query += 1
+                continue
+            json_result = json.loads(response.text)
+            print(voice_id, response.status_code, json_result)
+
+            # add final recognition result if 'RESULT' is contained
+            for elm in json_result:
+                if elm[0] == 'RESULT':
+                    result_recognize.append(elm[1])
+                    break
+
+            num_query += 1
+
+        # final result
+        print("====>", "".join(result_recognize))
+
         self._logout(uuid)
+        print("logout")
 
     def _login(self):
         # check necessary parameters
@@ -87,7 +124,6 @@ class RecaiusASR(object):
         data = json.dumps(values)
         data = data.encode('utf-8')
         response = requests.post(ASR_URL + uuid + '/logout', data=data, headers=headers, proxies=self.proxies)
-        uuid = response.text
 
         return
 
@@ -95,11 +131,11 @@ class RecaiusASR(object):
         files = {'voice': ('dummy.wav', pcm_data, 'application/octet-stream')}
         data = {'voiceid': voice_id}
         response = requests.put(ASR_URL + uuid + '/voice', files=files, data=data, proxies=self.proxies)
-        return response.status_code, response.text
+        return response
 
     def _result(self, uuid):
         response = requests.get(ASR_URL + uuid + '/result', proxies=self.proxies)
-        return response.status_code, response.text
+        return response
 
 class RecaiusASRException(Exception):
     pass
@@ -107,4 +143,4 @@ class RecaiusASRException(Exception):
 if __name__ == '__main__':
     from settings import ASR_ID, ASR_PASSWORD
     rec = RecaiusASR(ASR_ID, ASR_PASSWORD, 'ja_JP')
-    rec.recognize('../sample.wav')
+    rec.recognize('../sample4.wav')
