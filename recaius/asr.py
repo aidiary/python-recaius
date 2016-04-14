@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import wave
 import json
-import urllib.request
 import requests
 import pyaudio
 from settings import HTTP_PROXY, HTTPS_PROXY
@@ -31,14 +30,16 @@ class RecaiusASR(object):
 
         self._values['model'] = model
 
-        if HTTP_PROXY:
-            self._set_proxy()
+        # set proxies
+        self.proxies = {
+            'http': HTTP_PROXY,
+            'https': HTTPS_PROXY,
+        }
 
     def recognize(self, wave_file):
         uuid = self._login()
 
         w = wave.open(wave_file)
-        print('rate:', w.getframerate())
 
         p = pyaudio.PyAudio()
         stream = p.open(
@@ -49,8 +50,9 @@ class RecaiusASR(object):
         chunk = 999999999
         data = w.readframes(chunk)
         voiceid = 1
-        response = self._voice(uuid, voiceid, data)
-
+        self._voice(uuid, voiceid, data, wave_file)
+        response = self._voice(uuid, voiceid, b'', wave_file)
+        print("==>", response.status_code, response.text)
         self._logout(uuid)
 
     def _login(self):
@@ -65,9 +67,8 @@ class RecaiusASR(object):
         headers = {'Content-Type': 'application/json'}
         data = json.dumps(self._values)
         data = data.encode('utf-8')
-        req = urllib.request.Request(ASR_URL + 'login', data, headers)
-        response = urllib.request.urlopen(req)
-        uuid = response.read().decode('utf-8')
+        response = requests.post(ASR_URL + 'login', data=data, headers=headers, proxies=self.proxies)
+        uuid = response.text
 
         return uuid
 
@@ -78,33 +79,21 @@ class RecaiusASR(object):
         headers = {'Content-Type': 'application/json'}
         data = json.dumps(values)
         data = data.encode('utf-8')
-        req = urllib.request.Request(ASR_URL + uuid + '/logout', data, headers)
-        response = urllib.request.urlopen(req)
-        uuid = response.read().decode('utf-8')
+        response = requests.post(ASR_URL + uuid + '/logout', data=data, headers=headers, proxies=self.proxies)
+        uuid = response.text
 
         return
 
-    def _voice(self, uuid, voiceid, pcm_data):
-        form_data = dict()
-        form_data['uuid'] = uuid
-        form_data['voiceid'] = voiceid
-        form_data['voice'] = pcm_data
-
-        headers = {'Content-Type': 'multipart/form-data'}
-        req = urllib.request.Request(ASR_URL + uuid + '/voice', data=form_data, headers=headers, method='PUT')
-        response = urllib.request.urlopen(req)
-
+    def _voice(self, uuid, voiceid, pcm_data, wave_file):
+        voice = open(wave_file, 'rb')
+        files = {'voice': ('data.wav', voice, 'application/octet-stream')}
+        data = {'voiceid': voiceid}
+        response = requests.put(ASR_URL + uuid + '/voice', files=files, data=data, proxies=self.proxies)
+        print(response.status_code)
         return response
 
     def _result(self, uuid):
         pass
-
-    # TODO: Remove dual definition
-    def _set_proxy(self):
-        proxy_support = urllib.request.ProxyHandler({'http': HTTP_PROXY,
-                                                     'https': HTTPS_PROXY})
-        opener = urllib.request.build_opener(proxy_support)
-        urllib.request.install_opener(opener)
 
 class RecaiusASRException(Exception):
     pass
