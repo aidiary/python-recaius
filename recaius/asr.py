@@ -143,4 +143,4 @@ class RecaiusASRException(Exception):
 if __name__ == '__main__':
     from settings import ASR_ID, ASR_PASSWORD
     rec = RecaiusASR(ASR_ID, ASR_PASSWORD, 'ja_JP')
-    rec.recognize('../sample4.wav')
+    rec.recognize('../recaius_test.wav')
