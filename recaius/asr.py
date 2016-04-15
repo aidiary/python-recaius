@@ -49,7 +49,7 @@ class RecaiusASR(object):
         wf = wave.open(wave_file)
 
         # send speech data
-        chunk = 31250
+        chunk = 16384
         data = wf.readframes(chunk)
         voice_id = 1
         while data != b'':
@@ -58,6 +58,7 @@ class RecaiusASR(object):
                 continue
 
             json_result = json.loads(response.text)
+            print("=>", json_result)
 
             # add final recognition result if 'RESULT' is contained
             for elm in json_result:
@@ -78,6 +79,7 @@ class RecaiusASR(object):
                 num_query += 1
                 continue
             json_result = json.loads(response.text)
+            print("=>", json_result)
 
             # add final recognition result if 'RESULT' is contained
             for elm in json_result:
