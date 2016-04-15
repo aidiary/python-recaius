@@ -41,7 +41,6 @@ class RecaiusASR(object):
         result_recognize = []
 
         uuid = self._login()
-        print("login: uuid=%s" % uuid)
 
         wf = wave.open(wave_file)
 
@@ -55,7 +54,6 @@ class RecaiusASR(object):
                 continue
 
             json_result = json.loads(response.text)
-            print(voice_id, response.status_code, json_result)
 
             # add final recognition result if 'RESULT' is contained
             for elm in json_result:
@@ -76,7 +74,6 @@ class RecaiusASR(object):
                 num_query += 1
                 continue
             json_result = json.loads(response.text)
-            print(voice_id, response.status_code, json_result)
 
             # add final recognition result if 'RESULT' is contained
             for elm in json_result:
@@ -86,11 +83,9 @@ class RecaiusASR(object):
 
             num_query += 1
 
-        # final result
-        print("====>", "".join(result_recognize))
-
         self._logout(uuid)
-        print("logout")
+
+        return "".join(result_recognize)
 
     def _login(self):
         # check necessary parameters
@@ -133,10 +128,3 @@ class RecaiusASR(object):
 
 class RecaiusASRException(Exception):
     pass
-
-
-if __name__ == '__main__':
-    from settings import ASR_ID, ASR_PASSWORD
-
-    rec = RecaiusASR(ASR_ID, ASR_PASSWORD, 'ja_JP')
-    rec.recognize('../recaius_test.wav')
