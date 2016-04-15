@@ -11,31 +11,35 @@ MAX_QUERY = 10
 class RecaiusASR(object):
     """Speech Recognizer by RECAIUS-dev API"""
 
-    def __init__(self, recaius_id, recaius_password, lang):
+    def __init__(self, recaius_id, recaius_password):
         # TODO: Use proper id and password automatically according to lang
         self.recaius_id = recaius_id
         self.recaius_password = recaius_password
-        self.lang = lang
 
         self._values = dict()
         self._values['id'] = self.recaius_id
         self._values['password'] = self.recaius_password
 
-        model = dict()
-        if self.lang == 'ja_JP':
-            model['model_id'] = 1
-        elif self.lang == 'en_US':
-            model['model_id'] = 5
-        elif self.lang == 'zh_CN':
-            model['model_id'] = 7
-
-        self._values['model'] = model
+        self.set_lang('ja_JP')
 
         # set proxies
         self.proxies = {
             'http': HTTP_PROXY,
             'https': HTTPS_PROXY,
         }
+
+    def set_lang(self, lang):
+        model = dict()
+        if lang == 'ja_JP':
+            model['model_id'] = 1
+        elif lang == 'en_US':
+            model['model_id'] = 5
+        elif lang == 'zh_CN':
+            model['model_id'] = 7
+
+        self._values['model'] = model
+
+        return self
 
     def recognize(self, wave_file):
         result_recognize = []
