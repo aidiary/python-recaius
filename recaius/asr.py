@@ -82,12 +82,10 @@ class RecaiusASR(object):
         while data != b'':
             response = self._voice(uuid, voice_id, data)
             if response.status_code == 204:
-                print("%d>" % voice_id, "SKIP:", response.status_code)
                 voice_id += 1
                 continue
 
             json_result = json.loads(response.text)
-            print("%d>" % voice_id, json_result)
 
             # add final recognition result if 'RESULT' is contained
             result = [elm[1] for elm in json_result if elm[0] == 'RESULT']
@@ -107,11 +105,9 @@ class RecaiusASR(object):
         while num_query < MAX_QUERY:
             response = self._result(uuid)
             if response.status_code == 204:
-                print("SKIP!")
                 num_query += 1
                 continue
             json_result = json.loads(response.text)
-            print("F%d>" % num_query, json_result)
 
             # add final recognition result if 'RESULT' is contained
             result = [elm[1] for elm in json_result if elm[0] == 'RESULT']
