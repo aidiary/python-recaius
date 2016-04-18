@@ -5,7 +5,7 @@ import requests
 from settings import HTTP_PROXY, HTTPS_PROXY
 
 ASR_URL = "https://try-api.recaius.jp/asr/v1/"
-MAX_QUERY = 10
+MAX_QUERY = 20
 
 
 class RecaiusASR(object):
@@ -41,59 +41,7 @@ class RecaiusASR(object):
 
         return self
 
-    def recognize(self, wave_file):
-        result_recognize = []
-
-        uuid = self._login()
-
-        wf = wave.open(wave_file)
-
-        # send speech data
-        chunk = 16384
-        data = wf.readframes(chunk)
-        voice_id = 1
-        while data != b'':
-            response = self._voice(uuid, voice_id, data)
-            if response.status_code == 204:
-                continue
-
-            json_result = json.loads(response.text)
-            print("=>", json_result)
-
-            # add final recognition result if 'RESULT' is contained
-            for elm in json_result:
-                if elm[0] == 'RESULT':
-                    result_recognize.append(elm[1])
-
-            data = wf.readframes(chunk)
-            voice_id += 1
-
-        # send finalize signal
-        self._voice(uuid, voice_id, b'')
-
-        # get recognition result
-        num_query = 0
-        while num_query < MAX_QUERY:
-            response = self._result(uuid)
-            if response.status_code == 204:
-                num_query += 1
-                continue
-            json_result = json.loads(response.text)
-            print("=>", json_result)
-
-            # add final recognition result if 'RESULT' is contained
-            for elm in json_result:
-                if elm[0] == 'RESULT':
-                    result_recognize.append(elm[1])
-                    break
-
-            num_query += 1
-
-        self._logout(uuid)
-
-        return "".join(result_recognize)
-
-    def _login(self):
+    def login(self):
         # check necessary parameters
         if 'id' not in self._values:
             raise RecaiusASRException('Missing parameter: id')
@@ -110,7 +58,7 @@ class RecaiusASR(object):
 
         return uuid
 
-    def _logout(self, uuid):
+    def logout(self, uuid):
         values = dict()
         values['uuid'] = uuid
 
@@ -120,6 +68,60 @@ class RecaiusASR(object):
         requests.post(ASR_URL + uuid + '/logout', data=data, headers=headers, proxies=self.proxies)
 
         return
+
+    def recognize(self, uuid, wave_file):
+        result_recognize = []
+
+        wf = wave.open(wave_file)
+
+        # send speech data
+        chunk = wf.getnframes()
+        data = wf.readframes(chunk)
+
+        voice_id = 1
+        while data != b'':
+            response = self._voice(uuid, voice_id, data)
+            if response.status_code == 204:
+                print("%d>" % voice_id, "SKIP:", response.status_code)
+                voice_id += 1
+                continue
+
+            json_result = json.loads(response.text)
+            print("%d>" % voice_id, json_result)
+
+            # add final recognition result if 'RESULT' is contained
+            result = [elm[1] for elm in json_result if elm[0] == 'RESULT']
+            if result:
+                result_recognize.extend(result)
+                break
+
+            data = wf.readframes(chunk)
+            voice_id += 1
+
+        # send finalize signal
+        self._voice(uuid, voice_id, b'')
+        voice_id += 1
+
+        # get recognition result
+        num_query = 0
+        while num_query < MAX_QUERY:
+            response = self._result(uuid)
+            if response.status_code == 204:
+                print("SKIP!")
+                num_query += 1
+                continue
+            json_result = json.loads(response.text)
+            print("F%d>" % num_query, json_result)
+
+            # add final recognition result if 'RESULT' is contained
+            result = [elm[1] for elm in json_result if elm[0] == 'RESULT']
+            if result:
+                result_recognize.extend(result)
+                break
+
+            num_query += 1
+
+        return "".join(result_recognize)
 
     def _voice(self, uuid, voice_id, pcm_data):
         files = {'voice': ('dummy.wav', pcm_data, 'application/octet-stream')}
